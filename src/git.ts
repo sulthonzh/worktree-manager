@@ -52,7 +52,7 @@ export class GitManager {
           }
           current = { worktree: line.substring(9) };
         } else if (line.startsWith('branch ')) {
-          current.branch = line.substring(8).replace('refs/heads/', '');
+          current.branch = line.substring(7).replace('refs/heads/', '');
           current.isMain = current.worktree === this.repoRoot;
         } else if (line.startsWith('commit ')) {
           current.commit = line.substring(7);
