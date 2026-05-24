@@ -1,0 +1,57 @@
+{
+  "name": "worktree-manager",
+  "version": "1.0.0",
+  "description": "Zero-config CLI for git worktree management with intelligent automation",
+  "type": "module",
+  "bin": {
+    "wtm": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "git",
+    "worktree",
+    "git-worktree",
+    "git-worktrees",
+    "cli",
+    "developer-tools",
+    "workflow",
+    "git-branch",
+    "branch-management"
+  ],
+  "author": "Sulthon",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.1.0",
+    "chalk": "^5.3.0",
+    "inquirer": "^9.2.23",
+    "ora": "^8.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/inquirer": "^9.0.7",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sulthonzh/worktree-manager"
+  },
+  "bugs": {
+    "url": "https://github.com/sulthonzh/worktree-manager/issues"
+  },
+  "homepage": "https://github.com/sulthonzh/worktree-manager#readme"
+}
