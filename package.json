@@ -1,6 +1,6 @@
 {
   "name": "@sulthonzh/worktree-manager",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Zero-config CLI for git worktree management with intelligent automation",
   "type": "module",
   "bin": {

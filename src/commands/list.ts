@@ -1,3 +1,4 @@
+import path from 'path';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { GitManager } from '../git.js';
@@ -5,6 +6,7 @@ import { GitManager } from '../git.js';
 export const listCommand = new Command('list')
   .alias('ls')
   .option('-v, --verbose', 'Show detailed information')
+  .option('-j, --json', 'Output as JSON')
   .description('List all worktrees')
   .action(async (options) => {
     try {
@@ -12,7 +14,16 @@ export const listCommand = new Command('list')
       const worktrees = git.listWorktrees();
 
       if (worktrees.length === 0) {
-        console.log(chalk.yellow('No worktrees found.'));
+        if (options.json) {
+          console.log(JSON.stringify({ worktrees: [] }));
+        } else {
+          console.log(chalk.yellow('No worktrees found.'));
+        }
+        return;
+      }
+
+      if (options.json) {
+        console.log(JSON.stringify({ worktrees }, null, 2));
         return;
       }
 
@@ -36,7 +47,11 @@ export const listCommand = new Command('list')
       console.log('');
       console.log(chalk.gray(`Total: ${worktrees.length} worktree${worktrees.length > 1 ? 's' : ''}`));
     } catch (error) {
-      console.error(chalk.red(`Error: ${(error as Error).message}`));
+      if (options.json) {
+        console.log(JSON.stringify({ error: (error as Error).message }));
+      } else {
+        console.error(chalk.red(`Error: ${(error as Error).message}`));
+      }
       process.exit(1);
     }
   });
@@ -58,5 +73,3 @@ function formatBranch(branch: string, isMain: boolean = false): string {
   }
   return branch;
 }
-
-import path from 'path';

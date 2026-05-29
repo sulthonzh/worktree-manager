@@ -11,53 +11,64 @@ export const addCommand = new Command('add')
   .option('-d, --detach', 'Create detached worktree')
   .option('-f, --force', 'Force creation even if worktree exists')
   .option('-s, --skip-setup', 'Skip project setup commands')
+  .option('-c, --create-branch', 'Create the branch if it does not exist')
+  .option('-j, --json', 'Output as JSON')
   .description('Create a new worktree for the given branch')
   .action(async (branch: string, options) => {
     try {
-      const spinner = ora('Initializing git manager...').start();
       const git = new GitManager();
       const config = new ConfigManager();
       await config.load();
 
-      spinner.text = 'Creating worktree...';
+      const spinner = options.json ? null : ora('Creating worktree...').start();
+
       const worktreePath = git.addWorktree(branch, undefined, {
-        detach: options.detach
+        detach: options.detach,
+        createBranch: options.createBranch
       });
 
-      spinner.text = 'Detecting project type...';
       const detector = new ProjectDetector();
       const projectType = await detector.detectProject(git.getRepoRoot());
+      let copied: string[] = [];
 
       if (config.get().autoCopy && projectType) {
-        spinner.text = 'Copying configuration files...';
+        if (spinner) spinner.text = 'Copying configuration files...';
         const manager = new FileManager();
         const envFiles = await detector.getEnvFiles(git.getRepoRoot());
-        const { copied, skipped } = await manager.copyFiles(
-          git.getRepoRoot(),
-          worktreePath,
-          envFiles
-        );
-
-        if (copied.length > 0) {
-          console.log(chalk.gray(`  Copied: ${copied.join(', ')}`));
-        }
+        const result = await manager.copyFiles(git.getRepoRoot(), worktreePath, envFiles);
+        copied = result.copied;
       }
 
       if (!options.skipSetup && projectType && config.get().defaultHooks) {
-        spinner.text = 'Running project setup...';
+        if (spinner) spinner.text = 'Running project setup...';
         const manager = new FileManager();
         await manager.runSetupCommands(worktreePath, projectType.setupCommands);
       }
 
-      spinner.succeed(`Worktree created at ${chalk.cyan(worktreePath)}`);
-
-      console.log('');
-      console.log(`  Branch: ${chalk.green(branch)}`);
-      console.log(`  Path:   ${chalk.cyan(worktreePath)}`);
-      console.log(`  Switch to this worktree:`);
-      console.log(`    ${chalk.yellow('cd')} ${worktreePath}`);
+      if (spinner) {
+        spinner.succeed(`Worktree created at ${chalk.cyan(worktreePath)}`);
+        console.log('');
+        console.log(`  Branch: ${chalk.green(branch)}`);
+        console.log(`  Path:   ${chalk.cyan(worktreePath)}`);
+        if (copied.length > 0) {
+          console.log(`  Copied: ${chalk.gray(copied.join(', '))}`);
+        }
+        console.log(`  Switch to this worktree:`);
+        console.log(`    ${chalk.yellow('cd')} ${worktreePath}`);
+      } else {
+        console.log(JSON.stringify({
+          branch,
+          path: worktreePath,
+          copied,
+          projectType: projectType?.name ?? null
+        }, null, 2));
+      }
     } catch (error) {
-      ora().fail(chalk.red(`Failed: ${(error as Error).message}`));
+      if (options.json) {
+        console.log(JSON.stringify({ error: (error as Error).message }));
+      } else {
+        ora().fail(chalk.red(`Failed: ${(error as Error).message}`));
+      }
       process.exit(1);
     }
   });

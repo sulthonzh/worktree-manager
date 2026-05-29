@@ -69,7 +69,7 @@ export class GitManager {
     }
   }
 
-  addWorktree(branch: string, dest?: string, options: { detach?: boolean } = {}): string {
+  addWorktree(branch: string, dest?: string, options: { detach?: boolean; createBranch?: boolean } = {}): string {
     const worktrees = this.listWorktrees();
     const existing = worktrees.find(w => w.branch === branch);
 
@@ -78,8 +78,8 @@ export class GitManager {
     }
 
     const branchExists = this.branchExists(branch);
-    if (!branchExists) {
-      throw new Error(`Branch '${branch}' does not exist. Create it first with 'git checkout -b ${branch}'`);
+    if (!branchExists && !options.createBranch) {
+      throw new Error(`Branch '${branch}' does not exist. Use -c to create it, or create it first with 'git checkout -b ${branch}'`);
     }
 
     const worktreePath = dest || this.generateWorktreePath(branch);
@@ -89,7 +89,11 @@ export class GitManager {
       if (options.detach) {
         args.push('--detach');
       }
-      args.push(branch);
+      if (options.createBranch) {
+        args.push('-b', branch);
+      } else {
+        args.push(branch);
+      }
 
       execSync(`git worktree ${args.join(' ')}`, { cwd: this.repoRoot, stdio: 'pipe' });
 
@@ -142,6 +146,40 @@ export class GitManager {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  getWorktreeStatus(worktreePath: string): { dirty: boolean; ahead: number; behind: number; staged: number; untracked: number } {
+    try {
+      const output = execSync('git status --porcelain=v2 --branch', {
+        cwd: worktreePath,
+        encoding: 'utf-8'
+      }).trim();
+
+      let staged = 0;
+      let untracked = 0;
+      let ahead = 0;
+      let behind = 0;
+
+      for (const line of output.split('\n')) {
+        if (line.startsWith('1 ') || line.startsWith('2 ')) {
+          const xy = line.charAt(2) + line.charAt(3);
+          if (xy[0] !== '.' && xy[0] !== '?') staged++;
+          if (xy[1] !== '.') untracked++;
+        } else if (line.startsWith('u ')) {
+          untracked++;
+        } else if (line.startsWith('? ')) {
+          untracked++;
+        } else if (line.startsWith('# branch.ab +')) {
+          ahead = parseInt(line.substring('# branch.ab +'.length), 10) || 0;
+        } else if (line.startsWith('# branch.ab +0 -')) {
+          behind = parseInt(line.substring('# branch.ab +0 -'.length), 10) || 0;
+        }
+      }
+
+      return { dirty: staged > 0 || untracked > 0, ahead, behind, staged, untracked };
+    } catch {
+      return { dirty: false, ahead: 0, behind: 0, staged: 0, untracked: 0 };
     }
   }
 
