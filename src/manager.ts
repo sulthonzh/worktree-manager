@@ -30,7 +30,7 @@ export class FileManager {
 
         await fs.copyFile(sourcePath, targetPath);
         copied.push(file);
-      } catch (error) {
+      } catch {
         skipped.push(file);
       }
     }
@@ -42,7 +42,7 @@ export class FileManager {
     for (const cmd of commands) {
       try {
         await execAsync(cmd, { cwd: dir });
-      } catch (error) {
+      } catch {
         console.warn(`Warning: Setup command failed: ${cmd}`);
       }
     }
