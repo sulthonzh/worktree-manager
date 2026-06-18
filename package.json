@@ -54,5 +54,8 @@
   "bugs": {
     "url": "https://github.com/sulthonzh/worktree-manager/issues"
   },
-  "homepage": "https://github.com/sulthonzh/worktree-manager#readme"
+  "homepage": "https://github.com/sulthonzh/worktree-manager#readme",
+  "publishConfig": {
+    "access": "public"
+  }
 }
