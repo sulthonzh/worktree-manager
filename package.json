@@ -39,7 +39,7 @@
   "devDependencies": {
     "@types/node": "^20.12.12",
     "@types/inquirer": "^9.0.7",
-    "typescript": "^5.4.5",
+    "typescript": "^7.0.0",
     "vitest": "^4.0.0"
   },
   "files": [
